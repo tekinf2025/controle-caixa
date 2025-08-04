@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Caixa - Tekinformática</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            --background-primary: #0f0f23;
+            --background-secondary: #1a1a2e;
+            --background-tertiary: #16213e;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #b4b7c7;
+            --text-muted: #8892b0;
+            --accent-blue: #00d4ff;
+            --accent-purple: #667eea;
+            --accent-pink: #f093fb;
+            --shadow-light: 0 8px 32px rgba(31, 38, 135, 0.37);
+            --shadow-medium: 0 15px 35px rgba(31, 38, 135, 0.5);
+            --shadow-heavy: 0 25px 50px rgba(0, 0, 0, 0.25);
+            --border-radius-sm: 12px;
+            --border-radius-md: 16px;
+            --border-radius-lg: 24px;
+            --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background-primary);
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 200, 255, 0.1) 0%, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .shape:nth-child(1) {
+            top: 10%;
+            left: 10%;
+            width: 80px;
+            height: 80px;
+            background: var(--accent-blue);
+            border-radius: 50%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            top: 70%;
+            right: 10%;
+            width: 120px;
+            height: 120px;
+            background: var(--accent-purple);
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            animation-delay: -5s;
+        }
+
+        .shape:nth-child(3) {
+            bottom: 10%;
+            left: 50%;
+            width: 60px;
+            height: 60px;
+            background: var(--accent-pink);
+            transform: rotate(45deg);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            25% { transform: translateY(-20px) rotate(5deg); }
+            50% { transform: translateY(10px) rotate(-5deg); }
+            75% { transform: translateY(-15px) rotate(3deg); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 40px;
+            background: var(--glass-bg);
+            border-radius: var(--border-radius-lg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-light);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: var(--primary-gradient);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            50%, 100% { left: 100%; }
+        }
+
+        .company-name {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+            position: relative;
+        }
+
+        .ceo-name {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            margin-bottom: 25px;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .page-title {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            color: var(--text-primary);
+            font-weight: 700;
+            position: relative;
+        }
+
+        .cash-control-panel {
+            background: var(--glass-bg);
+            border-radius: var(--border-radius-lg);
+            padding: 50px;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-medium);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 30px;
+            background: var(--primary-gradient);
+            border-radius: 2px;
+        }
+
+        .banks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .bank-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--border-radius-md);
+            padding: 30px;
+            border: 1px solid var(--glass-border);
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .bank-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-gradient);
+            transform: scaleX(0);
+            transition: var(--transition-smooth);
+        }
+
+        .bank-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--shadow-heavy);
+            border-color: rgba(102, 126, 234, 0.4);
+        }
+
+        .bank-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .bank-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .bank-logo {
+            width: 60px;
+            height: 60px;
+            margin-right: 20px;
+            border-radius: var(--border-radius-sm);
+            object-fit: cover;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: var(--transition-bounce);
+        }
+
+        .bank-card:hover .bank-logo {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .bank-name {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .currency-input {
+            width: 100%;
+            padding: 20px 24px;
+            font-size: 1.4rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius-sm);
+            color: var(--text-primary);
+            text-align: right;
+            transition: var(--transition-smooth);
+            font-family: 'Inter', monospace;
+            letter-spacing: 0.5px;
+        }
+
+        .currency-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.1), 0 0 25px rgba(0, 212, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+            transform: scale(1.02);
+        }
+
+        .currency-input::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .total-section {
+            background: var(--primary-gradient);
+            border-radius: var(--border-radius-lg);
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-medium);
+        }
+
+        .total-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .total-label {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .total-input {
+            width: 100%;
+            max-width: 500px;
+            padding: 25px 30px;
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: rgba(255, 255, 255, 0.15);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius-md);
+            color: var(--text-primary);
+            text-align: center;
+            margin: 0 auto;
+            transition: var(--transition-smooth);
+            font-family: 'Inter', monospace;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .total-input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.1), 0 0 40px rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .actions {
+            display: flex;
+            gap: 25px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            position: relative;
+            padding: 18px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            min-width: 180px;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-save {
+            background: var(--success-gradient);
+            color: var(--text-primary);
+        }
+
+        .btn-save:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 30px rgba(79, 172, 254, 0.4);
+        }
+
+        .btn-load {
+            background: var(--secondary-gradient);
+            color: var(--text-primary);
+        }
+
+        .btn-load:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 30px rgba(240, 147, 251, 0.4);
+        }
+
+        .status {
+            margin-top: 25px;
+            padding: 20px 30px;
+            border-radius: var(--border-radius-sm);
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: var(--transition-smooth);
+            backdrop-filter: blur(10px);
+        }
+
+        .status.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .status.success {
+            background: rgba(79, 172, 254, 0.15);
+            border: 2px solid rgba(79, 172, 254, 0.3);
+            color: #4facfe;
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.2);
+        }
+
+        .status.error {
+            background: rgba(245, 87, 108, 0.15);
+            border: 2px solid rgba(245, 87, 108, 0.3);
+            color: #f5576c;
+            box-shadow: 0 8px 25px rgba(245, 87, 108, 0.2);
+        }
+
+        .last-update {
+            text-align: center;
+            margin-top: 25px;
+            color: var(--text-muted);
+            font-style: italic;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .last-update::before {
+            content: '🕒';
+            font-size: 1.2rem;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 30px 0;
+            padding: 30px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent-blue);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .keyboard-shortcuts {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius-sm);
+            padding: 15px 20px;
+            backdrop-filter: blur(10px);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            opacity: 0.7;
+            transition: var(--transition-smooth);
+            box-shadow: var(--shadow-light);
+        }
+
+        .keyboard-shortcuts:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+
+        .keyboard-shortcuts .shortcut {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+
+        .keyboard-shortcuts .shortcut:last-child {
+            margin-bottom: 0;
+        }
+
+        .keyboard-shortcuts .key {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 0;
+            }
+
+            .header {
+                padding: 30px 20px;
+                margin-bottom: 30px;
+            }
+
+            .company-name {
+                font-size: 2.5rem;
+            }
+
+            .page-title {
+                font-size: 1.8rem;
+            }
+
+            .cash-control-panel {
+                padding: 30px 20px;
+            }
+
+            .banks-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                margin-bottom: 40px;
+            }
+
+            .bank-card {
+                padding: 25px 20px;
+            }
+
+            .bank-logo {
+                width: 50px;
+                height: 50px;
+                margin-right: 15px;
+            }
+
+            .bank-name {
+                font-size: 1.2rem;
+            }
+
+            .currency-input {
+                padding: 18px 20px;
+                font-size: 1.2rem;
+            }
+
+            .total-section {
+                padding: 30px 20px;
+            }
+
+            .total-label {
+                font-size: 1.5rem;
+            }
+
+            .total-input {
+                font-size: 2rem;
+                padding: 20px;
+                max-width: 100%;
+            }
+
+            .actions {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+                padding: 16px 30px;
+                font-size: 1.1rem;
+            }
+
+            .keyboard-shortcuts {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 25px 15px;
+            }
+
+            .cash-control-panel {
+                padding: 25px 15px;
+            }
+
+            .bank-card {
+                padding: 20px 15px;
+            }
+
+            .total-section {
+                padding: 25px 15px;
+            }
+
+            .total-input {
+                font-size: 1.8rem;
+                padding: 18px;
+            }
+        }
+
+        /* Animações de entrada */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .cash-control-panel {
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }
+
+        .bank-card {
+            animation: fadeInUp 0.6s ease-out 0.4s backwards;
+        }
+
+        .bank-card:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .bank-card:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+
+        .bank-card:nth-child(4) {
+            animation-delay: 0.7s;
+        }
+
+        .total-section {
+            animation: fadeInUp 0.8s ease-out 0.8s backwards;
+        }
+
+        .actions {
+            animation: fadeInUp 0.8s ease-out 1s backwards;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="company-name">Tekinformática</div>
+            <div class="ceo-name">CEO: Ricardo Moraes</div>
+            <div class="page-title">Controle de Caixa</div>
+        </div>
+
+        <div class="cash-control-panel">
+            <div class="section-title">💳 Contas Bancárias</div>
+            
+            <div class="banks-grid">
+                <div class="bank-card">
+                    <div class="bank-header">
+                        <img src="https://i.imgur.com/qI1YTjQ.png" alt="BTG Pactual" class="bank-logo">
+                        <div class="bank-name">BTG Pactual</div>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="btg_pactual" class="currency-input" placeholder="R$ 0,00">
+                    </div>
+                </div>
+
+                <div class="bank-card">
+                    <div class="bank-header">
+                        <img src="https://i.imgur.com/ABriMdp.png" alt="Banco do Brasil" class="bank-logo">
+                        <div class="bank-name">Banco do Brasil</div>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="banco_brasil" class="currency-input" placeholder="R$ 0,00">
+                    </div>
+                </div>
+
+                <div class="bank-card">
+                    <div class="bank-header">
+                        <img src="https://i.imgur.com/Wuv0YFe.png" alt="NU-Bank PF" class="bank-logo">
+                        <div class="bank-name">NU-Bank PF</div>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="nubank_pf" class="currency-input" placeholder="R$ 0,00">
+                    </div>
+                </div>
+
+                <div class="bank-card">
+                    <div class="bank-header">
+                        <img src="https://i.imgur.com/Wuv0YFe.png" alt="NU-Bank PJ" class="bank-logo">
+                        <div class="bank-name">NU-Bank PJ</div>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="nubank_pj" class="currency-input" placeholder="R$ 0,00">
+                    </div>
+                </div>
+            </div>
+
+            <div class="total-section">
+                <div class="total-label">💰 Total Consolidado</div>
+                <input type="text" id="total" class="total-input" placeholder="R$ 0,00">
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-save" onclick="saveData()">💾 Salvar Dados</button>
+                <button class="btn btn-load" onclick="loadData()">📥 Carregar Dados</button>
+            </div>
+
+            <div class="loading">
+                <div class="spinner"></div>
+                <div class="loading-text">Processando...</div>
+            </div>
+
+            <div id="status" class="status"></div>
+            <div id="lastUpdate" class="last-update"></div>
+        </div>
+    </div>
+
+    <div class="keyboard-shortcuts">
+        <div class="shortcut">
+            <span class="key">Ctrl</span> + <span class="key">S</span> Salvar
+        </div>
+        <div class="shortcut">
+            <span class="key">Ctrl</span> + <span class="key">L</span> Carregar
+        </div>
+    </div>
+
+    <script>
+        // Configuração do Supabase
+        const supabaseUrl = 'https://ivumtyhdkjurerknjnpt.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2dW10eWhka2p1cmVya25qbnB0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzNjUyMjMsImV4cCI6MjA2NTk0MTIyM30.rbkqMbSYczGbJdGSjUvARGLIU3Gf-B9q0RWm0vW99Bs';
+        
+        // Aguarda a biblioteca carregar antes de criar o cliente
+        let supabase;
+        
+        function initializeSupabase() {
+            if (typeof window.supabase !== 'undefined') {
+                supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+                return true;
+            } else if (typeof window.createClient !== 'undefined') {
+                supabase = window.createClient(supabaseUrl, supabaseKey);
+                return true;
+            }
+            return false;
+        }
+
+        // Elementos do DOM
+        const btgInput = document.getElementById('btg_pactual');
+        const bbInput = document.getElementById('banco_brasil');
+        const nupfInput = document.getElementById('nubank_pf');
+        const nupjInput = document.getElementById('nubank_pj');
+        const totalInput = document.getElementById('total');
+        const statusDiv = document.getElementById('status');
+        const lastUpdateDiv = document.getElementById('lastUpdate');
+        const loading = document.querySelector('.loading');
+
+        // Formatação de moeda brasileira
+        function formatCurrency(value) {
+            const number = parseFloat(value) || 0;
+            return number.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            });
+        }
+
+        // Converter valor formatado para número
+        function parseCurrency(value) {
+            if (!value) return 0;
+            return parseFloat(value.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
+        }
+
+        // Aplicar máscara de moeda com animação suave
+        function applyCurrencyMask(input) {
+            const value = parseCurrency(input.value);
+            const formattedValue = formatCurrency(value);
+            
+            // Adiciona uma pequena animação ao campo
+            input.style.transform = 'scale(1.02)';
+            setTimeout(() => {
+                input.value = formattedValue;
+                input.style.transform = 'scale(1)';
+            }, 100);
+        }
+
+        // Calcular total automaticamente com animação
+        function calculateTotal() {
+            const btg = parseCurrency(btgInput.value);
+            const bb = parseCurrency(bbInput.value);
+            const nupf = parseCurrency(nupfInput.value);
+            const nupj = parseCurrency(nupjInput.value);
+            
+            const total = btg + bb + nupf + nupj;
+            
+            // Animação no campo total
+            totalInput.style.transform = 'scale(1.05)';
+            totalInput.style.boxShadow = '0 0 0 6px rgba(255, 255, 255, 0.1)';
+            
+            setTimeout(() => {
+                totalInput.value = formatCurrency(total);
+                totalInput.style.transform = 'scale(1)';
+                totalInput.style.boxShadow = '';
+            }, 200);
+        }
+
+        // Event listeners para formatação e cálculo automático
+        [btgInput, bbInput, nupfInput, nupjInput].forEach(input => {
+            input.addEventListener('blur', function() {
+                applyCurrencyMask(this);
+                calculateTotal();
+            });
+            
+            input.addEventListener('input', function() {
+                // Remove caracteres não numéricos exceto vírgula e ponto
+                this.value = this.value.replace(/[^\d,.-]/g, '');
+            });
+
+            // Adiciona efeitos visuais ao focar
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+            });
+
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+
+        // Event listener para o campo total (permite edição manual)
+        totalInput.addEventListener('blur', function() {
+            applyCurrencyMask(this);
+        });
+
+        totalInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^\d,.-]/g, '');
+        });
+
+        // Mostrar status com animações aprimoradas
+        function showStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            
+            // Força um reflow para garantir que a animação funcione
+            statusDiv.offsetHeight;
+            statusDiv.classList.add('show');
+            
+            // Adiciona vibração sutil em dispositivos móveis
+            if (navigator.vibrate) {
+                navigator.vibrate(type === 'success' ? [50, 30, 50] : [100]);
+            }
+            
+            setTimeout(() => {
+                statusDiv.classList.remove('show');
+            }, 4000);
+        }
+
+        // Mostrar/ocultar loading com animação
+        function toggleLoading(show) {
+            if (show) {
+                loading.style.display = 'block';
+                loading.style.opacity = '0';
+                loading.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    loading.style.opacity = '1';
+                    loading.style.transform = 'translateY(0)';
+                }, 50);
+            } else {
+                loading.style.opacity = '0';
+                loading.style.transform = 'translateY(-20px)';
+                
+                setTimeout(() => {
+                    loading.style.display = 'none';
+                }, 300);
+            }
+        }
+
+        // Salvar dados no Supabase
+        async function saveData() {
+            try {
+                if (!supabase && !initializeSupabase()) {
+                    showStatus('❌ Erro: Banco de dados não disponível', 'error');
+                    return;
+                }
+                
+                toggleLoading(true);
+                
+                // Criar data no fuso horário do Brasil (UTC-3)
+                const now = new Date();
+                const brazilTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+                
+                const data = {
+                    btg_pactual: parseCurrency(btgInput.value),
+                    banco_brasil: parseCurrency(bbInput.value),
+                    nubank_pf: parseCurrency(nupfInput.value),
+                    nubank_pj: parseCurrency(nupjInput.value),
+                    total: parseCurrency(totalInput.value),
+                    data_registro: brazilTime.toISOString()
+                };
+
+                // Verificar se já existe um registro para hoje (horário do Brasil)
+                const today = brazilTime.toISOString().split('T')[0];
+                const { data: existingData, error: selectError } = await supabase
+                    .from('controle_caixa')
+                    .select('*')
+                    .gte('data_registro', today + 'T00:00:00.000Z')
+                    .lt('data_registro', today + 'T23:59:59.999Z')
+                    .single();
+
+                let result;
+                if (existingData) {
+                    // Atualizar registro existente
+                    result = await supabase
+                        .from('controle_caixa')
+                        .update(data)
+                        .eq('id', existingData.id);
+                } else {
+                    // Criar novo registro
+                    result = await supabase
+                        .from('controle_caixa')
+                        .insert([data]);
+                }
+
+                if (result.error) {
+                    throw result.error;
+                }
+
+                showStatus('✅ Dados salvos com sucesso!', 'success');
+                updateLastUpdateTime();
+                
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+                showStatus('❌ Erro ao salvar dados: ' + error.message, 'error');
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+        // Carregar dados do Supabase
+        async function loadData() {
+            try {
+                if (!supabase && !initializeSupabase()) {
+                    showStatus('❌ Erro: Banco de dados não disponível', 'error');
+                    return;
+                }
+                
+                toggleLoading(true);
+                
+                const { data, error } = await supabase
+                    .from('controle_caixa')
+                    .select('*')
+                    .order('data_registro', { ascending: false })
+                    .limit(1);
+
+                if (error) {
+                    throw error;
+                }
+
+                if (data && data.length > 0) {
+                    const latest = data[0];
+                    
+                    // Animação sequencial ao carregar dados
+                    const inputs = [btgInput, bbInput, nupfInput, nupjInput, totalInput];
+                    const values = [
+                        formatCurrency(latest.btg_pactual || 0),
+                        formatCurrency(latest.banco_brasil || 0),
+                        formatCurrency(latest.nubank_pf || 0),
+                        formatCurrency(latest.nubank_pj || 0),
+                        formatCurrency(latest.total || 0)
+                    ];
+                    
+                    inputs.forEach((input, index) => {
+                        setTimeout(() => {
+                            input.style.transform = 'scale(1.05)';
+                            input.style.borderColor = 'var(--accent-blue)';
+                            
+                            setTimeout(() => {
+                                input.value = values[index];
+                                input.style.transform = 'scale(1)';
+                                input.style.borderColor = '';
+                            }, 200);
+                        }, index * 100);
+                    });
+                    
+                    showStatus('✅ Dados carregados com sucesso!', 'success');
+                    updateLastUpdateTime(latest.data_registro);
+                } else {
+                    showStatus('ℹ️ Nenhum dado encontrado', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar:', error);
+                showStatus('❌ Erro ao carregar dados: ' + error.message, 'error');
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+        // Atualizar timestamp da última atualização
+        function updateLastUpdateTime(timestamp) {
+            const time = timestamp ? new Date(timestamp) : new Date();
+            lastUpdateDiv.textContent = `Última atualização: ${time.toLocaleString('pt-BR', {
+                timeZone: 'America/Sao_Paulo',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            })}`;
+        }
+
+        // Carregar dados automaticamente ao iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Aguarda um pouco para garantir que a biblioteca carregue
+            setTimeout(() => {
+                if (initializeSupabase()) {
+                    loadData();
+                } else {
+                    // Tenta novamente após mais tempo
+                    setTimeout(() => {
+                        if (initializeSupabase()) {
+                            loadData();
+                        } else {
+                            showStatus('⚠️ Modo offline - dados não serão salvos', 'error');
+                        }
+                    }, 2000);
+                }
+            }, 1000);
+        });
+
+        // Atalhos de teclado
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                saveData();
+            } else if (e.ctrlKey && e.key === 'l') {
+                e.preventDefault();
+                loadData();
+            }
+        });
+
+        // Adiciona efeitos visuais aos botões
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('mousedown', function() {
+                this.style.transform = 'translateY(-1px) scale(0.98)';
+            });
+            
+            btn.addEventListener('mouseup', function() {
+                this.style.transform = '';
+            });
+        });
+    </script>
+</body>
+</html>
