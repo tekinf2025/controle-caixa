@@ -202,8 +202,8 @@
 
         .banks-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
             margin-bottom: 30px;
         }
 
@@ -566,7 +566,7 @@
 
             .banks-grid {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 15px;
+                gap: 12px;
                 margin-bottom: 30px;
             }
 
@@ -751,6 +751,16 @@
                         <input type="text" id="nubank_pj" class="currency-input" placeholder="R$ 0,00">
                     </div>
                 </div>
+
+                <div class="bank-card">
+                    <div class="bank-header">
+                        <img src="https://i.imgur.com/PBtLrJJ.png" alt="Cartões a receber" class="bank-logo">
+                        <div class="bank-name">Cartões a receber</div>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="cartoes_receber" class="currency-input" placeholder="R$ 0,00">
+                    </div>
+                </div>
             </div>
 
             <div class="total-section">
@@ -806,6 +816,7 @@
         const bbInput = document.getElementById('banco_brasil');
         const nupfInput = document.getElementById('nubank_pf');
         const nupjInput = document.getElementById('nubank_pj');
+        const cartoesInput = document.getElementById('cartoes_receber');
         const totalInput = document.getElementById('total');
         const statusDiv = document.getElementById('status');
         const lastUpdateDiv = document.getElementById('lastUpdate');
@@ -845,8 +856,9 @@
             const bb = parseCurrency(bbInput.value);
             const nupf = parseCurrency(nupfInput.value);
             const nupj = parseCurrency(nupjInput.value);
+            const cartoes = parseCurrency(cartoesInput.value);
             
-            const total = btg + bb + nupf + nupj;
+            const total = btg + bb + nupf + nupj + cartoes;
             
             // Animação no campo total
             totalInput.style.transform = 'scale(1.05)';
@@ -860,7 +872,7 @@
         }
 
         // Event listeners para formatação e cálculo automático
-        [btgInput, bbInput, nupfInput, nupjInput].forEach(input => {
+        [btgInput, bbInput, nupfInput, nupjInput, cartoesInput].forEach(input => {
             input.addEventListener('blur', function() {
                 applyCurrencyMask(this);
                 calculateTotal();
@@ -949,6 +961,7 @@
                     banco_brasil: parseCurrency(bbInput.value),
                     nubank_pf: parseCurrency(nupfInput.value),
                     nubank_pj: parseCurrency(nupjInput.value),
+                    cartoes_receber: parseCurrency(cartoesInput.value),
                     total: parseCurrency(totalInput.value),
                     data_registro: brazilTime.toISOString()
                 };
@@ -1015,12 +1028,13 @@
                     const latest = data[0];
                     
                     // Animação sequencial ao carregar dados
-                    const inputs = [btgInput, bbInput, nupfInput, nupjInput, totalInput];
+                    const inputs = [btgInput, bbInput, nupfInput, nupjInput, cartoesInput, totalInput];
                     const values = [
                         formatCurrency(latest.btg_pactual || 0),
                         formatCurrency(latest.banco_brasil || 0),
                         formatCurrency(latest.nubank_pf || 0),
                         formatCurrency(latest.nubank_pj || 0),
+                        formatCurrency(latest.cartoes_receber || 0),
                         formatCurrency(latest.total || 0)
                     ];
                     
